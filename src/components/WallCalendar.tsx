@@ -1,9 +1,26 @@
-import { useMemo, useState, useEffect } from 'react';
-import { Theme, ThemeConfig, CalendarDay, DateRange } from '../types/calendar';
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  type PointerEvent as ReactPointerEvent,
+  type AnimationEvent as ReactAnimationEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
+import { Theme, ThemeConfig, CalendarDay, DateRange, RangeNote } from '../types/calendar';
 import SpiralBinding from './SpiralBinding';
 import HeroSection from './HeroSection';
 import CalendarGrid from './CalendarGrid';
 import NotesSection from './NotesSection';
+import FestivalPanel from './FestivalPanel';
+import { getFestivalsInRange } from '../data/festivals';
+
+type FlipPhase = 'idle' | 'out-next' | 'in-next' | 'out-prev' | 'in-prev';
+
+const FLIP_OUT_NEXT = 'calendarPageFlipOutNext';
+const FLIP_IN_NEXT = 'calendarPageFlipInNext';
+const FLIP_OUT_PREV = 'calendarPageFlipOutPrev';
+const FLIP_IN_PREV = 'calendarPageFlipInPrev';
 
 const THEMES: Record<Theme, ThemeConfig> = {
   glacier: {
@@ -34,11 +51,20 @@ export default function WallCalendar() {
   const [theme, setTheme] = useState<Theme>('glacier');
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
   const [notes, setNotes] = useState('');
+  const [rangeNotes, setRangeNotes] = useState<RangeNote[]>([]);
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [mounted, setMounted] = useState(false);
+  const [flipPhase, setFlipPhase] = useState<FlipPhase>('idle');
+  const flipPhaseRef = useRef<FlipPhase>('idle');
+  const swipeStart = useRef<{ x: number; pointerId: number } | null>(null);
+  const flipOutConsumedRef = useRef(false);
+
+  useEffect(() => {
+    flipPhaseRef.current = flipPhase;
+  }, [flipPhase]);
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 50);
@@ -58,18 +84,120 @@ export default function WallCalendar() {
 
   const yearLabel = useMemo(() => String(visibleMonth.getFullYear()), [visibleMonth]);
 
+  const festivalsInSelection = useMemo(() => {
+    if (!dateRange.start) return [];
+    const end = dateRange.end ?? dateRange.start;
+    return getFestivalsInRange(dateRange.start, end, 8);
+  }, [dateRange.start, dateRange.end]);
+
   function addMonths(base: Date, delta: number) {
     return new Date(base.getFullYear(), base.getMonth() + delta, 1);
   }
 
-  function goPrevMonth() {
-    setVisibleMonth((prev) => addMonths(prev, -1));
+  function requestMonthChange(direction: -1 | 1) {
+    if (flipPhaseRef.current !== 'idle') return;
+    flipOutConsumedRef.current = false;
     setDateRange({ start: null, end: null });
+    setFlipPhase(direction === 1 ? 'out-next' : 'out-prev');
   }
 
-  function goNextMonth() {
-    setVisibleMonth((prev) => addMonths(prev, 1));
-    setDateRange({ start: null, end: null });
+  function handleFlipAnimationEnd(event: ReactAnimationEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+
+    const name = event.animationName;
+    const phase = flipPhaseRef.current;
+
+    if (phase === 'out-next' && name === FLIP_OUT_NEXT) {
+      if (flipOutConsumedRef.current) return;
+      flipOutConsumedRef.current = true;
+      setVisibleMonth((m) => addMonths(m, 1));
+      flipPhaseRef.current = 'in-next';
+      setFlipPhase('in-next');
+      return;
+    }
+
+    if (phase === 'out-prev' && name === FLIP_OUT_PREV) {
+      if (flipOutConsumedRef.current) return;
+      flipOutConsumedRef.current = true;
+      setVisibleMonth((m) => addMonths(m, -1));
+      flipPhaseRef.current = 'in-prev';
+      setFlipPhase('in-prev');
+      return;
+    }
+
+    if (phase === 'in-next' && name === FLIP_IN_NEXT) {
+      flipOutConsumedRef.current = false;
+      flipPhaseRef.current = 'idle';
+      setFlipPhase('idle');
+      return;
+    }
+
+    if (phase === 'in-prev' && name === FLIP_IN_PREV) {
+      flipOutConsumedRef.current = false;
+      flipPhaseRef.current = 'idle';
+      setFlipPhase('idle');
+    }
+  }
+
+  function normalizedRange(start: Date, end: Date): { from: Date; to: Date } {
+    const a = start.getTime();
+    const b = end.getTime();
+    return a <= b ? { from: start, to: end } : { from: end, to: start };
+  }
+
+  function saveNoteForSelectedRange() {
+    if (!dateRange.start || !dateRange.end) return;
+    const text = notes.trim();
+    if (!text) return;
+    const { from, to } = normalizedRange(dateRange.start, dateRange.end);
+    const entry: RangeNote = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      start: new Date(from.getFullYear(), from.getMonth(), from.getDate()),
+      end: new Date(to.getFullYear(), to.getMonth(), to.getDate()),
+      text,
+      createdAt: new Date(),
+    };
+    setRangeNotes((prev) => [entry, ...prev]);
+    setNotes('');
+  }
+
+  function deleteRangeNote(id: string) {
+    setRangeNotes((prev) => prev.filter((n) => n.id !== id));
+  }
+
+  function handleFlipStagePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (flipPhaseRef.current !== 'idle') return;
+    if (event.button !== 0) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('textarea') || target.closest('button')) return;
+    swipeStart.current = { x: event.clientX, pointerId: event.pointerId };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handleFlipStagePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    if (!start || start.pointerId !== event.pointerId) return;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      /* capture may already be released */
+    }
+    if (flipPhaseRef.current !== 'idle') return;
+    const dx = event.clientX - start.x;
+    if (Math.abs(dx) < 56) return;
+    requestMonthChange(dx < 0 ? 1 : -1);
+  }
+
+  function handleFlipStageKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (flipPhaseRef.current !== 'idle') return;
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      requestMonthChange(-1);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      requestMonthChange(1);
+    }
   }
 
   function handleDayClick(day: CalendarDay) {
@@ -103,26 +231,18 @@ export default function WallCalendar() {
         opacity: mounted ? undefined : 0,
       }}
     >
-      {/* Wall-mounted paper shadow */}
+
+      <div className="relative w-full" style={{ backgroundColor: 'transparent' }}>
+        <SpiralBinding />
+      </div>
+
       <div
-        className="relative bg-white rounded-2xl overflow-hidden"
+        className="relative rounded-2xl overflow-hidden bg-white"
         style={{
           boxShadow:
             '0 4px 6px rgba(0,0,0,0.07), 0 12px 40px rgba(0,0,0,0.18), 0 32px 80px rgba(0,0,0,0.12), 0 2px 0 #d1d5db',
         }}
       >
-        {/* Spiral binding — sits at very top */}
-        <div
-          className="relative w-full"
-          style={{
-            background: '#f9fafb',
-            borderBottom: '1px solid #e5e7eb',
-            zIndex: 10,
-          }}
-        >
-          <SpiralBinding numCoils={35} />
-        </div>
-
         {/* Theme switcher */}
         <button
           onClick={toggleTheme}
@@ -151,97 +271,135 @@ export default function WallCalendar() {
           {isGlacier ? 'SUNSET' : 'GLACIER'}
         </button>
 
-        {/* Hero section */}
-        <div className="relative" style={{ marginBottom: '28px' }}>
-          <HeroSection
-            theme={themeConfig}
-            isGlacier={isGlacier}
-            monthLabel={monthLabel}
-            yearLabel={yearLabel}
-            onPrevMonth={goPrevMonth}
-            onNextMonth={goNextMonth}
-          />
-        </div>
-
-        {/* Body section */}
-        <div className="px-5 pb-6 pt-2">
-          {/* Desktop: side by side | Mobile: calendar top, notes bottom */}
-          <div className="flex flex-col-reverse md:flex-row gap-5">
-            {/* Notes — bottom on mobile, left on desktop */}
-            <div
-              className="md:w-5/12 w-full"
-              style={{ minHeight: '224px' }}
-            >
-              <NotesSection notes={notes} onChange={setNotes} />
-            </div>
-
-            {/* Divider */}
-            <div
-              className="hidden md:block w-px self-stretch"
-              style={{ background: '#e5e7eb', margin: '0 4px' }}
-            />
-
-            {/* Calendar — top on mobile, right on desktop */}
-            <div className="md:w-8/12 w-full">
-              <CalendarGrid
-                visibleMonth={visibleMonth}
-                dateRange={dateRange}
-                onDayClick={handleDayClick}
+        {/* Turning "page": hero + body flip together when changing month */}
+        <div
+          className="calendar-flip-stage outline-none"
+          tabIndex={0}
+          role="region"
+          aria-label="Calendar. Swipe horizontally on the photo, tap the left or right side of the month ribbon, or use arrow keys to turn the page to another month."
+          onPointerDown={handleFlipStagePointerDown}
+          onPointerUp={handleFlipStagePointerUp}
+          onPointerCancel={() => {
+            swipeStart.current = null;
+          }}
+          onKeyDown={handleFlipStageKeyDown}
+        >
+          <div
+            className={[
+              'calendar-flip-inner',
+              flipPhase === 'out-next' ? 'calendar-flip-inner--out-next' : '',
+              flipPhase === 'in-next' ? 'calendar-flip-inner--in-next' : '',
+              flipPhase === 'out-prev' ? 'calendar-flip-inner--out-prev' : '',
+              flipPhase === 'in-prev' ? 'calendar-flip-inner--in-prev' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            onAnimationEnd={handleFlipAnimationEnd}
+            style={{ pointerEvents: flipPhase === 'idle' ? undefined : 'none' }}
+          >
+            <div className="relative" style={{ marginBottom: '28px' }}>
+              <HeroSection
                 theme={themeConfig}
+                isGlacier={isGlacier}
+                monthLabel={monthLabel}
+                yearLabel={yearLabel}
+                onNavigateMonth={requestMonthChange}
               />
             </div>
-          </div>
 
-          {/* Selection info strip */}
-          {(dateRange.start || dateRange.end) && (
-            <div
-              className="mt-4 flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-300"
-              style={{ background: themeConfig.primaryLighter }}
-            >
-              <div style={{ fontSize: '11px', color: themeConfig.primary, fontWeight: 600 }}>
-                {dateRange.start && !dateRange.end && (
-                  <span>
-                    From{' '}
-                    <strong>
-                      {dateRange.start.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </strong>{' '}
-                    — select an end date
-                  </span>
-                )}
-                {dateRange.start && dateRange.end && (
-                  <span>
-                    {dateRange.start.toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}{' '}
-                    &rarr;{' '}
-                    {dateRange.end.toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}{' '}
-                    &middot;{' '}
-                    {Math.abs(
-                      Math.round(
-                        (dateRange.end.getTime() - dateRange.start.getTime()) /
-                          (1000 * 60 * 60 * 24)
-                      )
-                    ) + 1}{' '}
-                    days
-                  </span>
-                )}
+            <div className="px-5 pb-6 pt-2">
+              <div className="flex flex-col-reverse md:flex-row gap-5">
+                <div
+                  className="md:w-5/12 w-full"
+                  style={{ minHeight: '224px' }}
+                >
+                  <NotesSection
+                    notes={notes}
+                    onChange={setNotes}
+                    rangeNotes={rangeNotes}
+                    onDeleteRangeNote={deleteRangeNote}
+                    canSaveRangeNote={Boolean(dateRange.start && dateRange.end)}
+                    onSaveRangeNote={saveNoteForSelectedRange}
+                    themePrimary={themeConfig.primary}
+                    themeMuted={themeConfig.primaryLighter}
+                  />
+                </div>
+
+                <div
+                  className="hidden md:block w-px self-stretch"
+                  style={{ background: '#e5e7eb', margin: '0 4px' }}
+                />
+
+                <div className="md:w-8/12 w-full">
+                  <CalendarGrid
+                    visibleMonth={visibleMonth}
+                    dateRange={dateRange}
+                    onDayClick={handleDayClick}
+                    theme={themeConfig}
+                  />
+                </div>
               </div>
-              <button
-                onClick={() => setDateRange({ start: null, end: null })}
-                className="transition-opacity hover:opacity-70"
-                style={{ fontSize: '11px', color: themeConfig.primary, fontWeight: 700 }}
-              >
-                Clear
-              </button>
+
+              {(dateRange.start || dateRange.end) && (
+                <div
+                  className="mt-4 flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-300"
+                  style={{ background: themeConfig.primaryLighter }}
+                >
+                  <div style={{ fontSize: '11px', color: themeConfig.primary, fontWeight: 600 }}>
+                    {dateRange.start && !dateRange.end && (
+                      <span>
+                        From{' '}
+                        <strong>
+                          {dateRange.start.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </strong>{' '}
+                        — select an end date
+                      </span>
+                    )}
+                    {dateRange.start && dateRange.end && (
+                      <span>
+                        {dateRange.start.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}{' '}
+                        &rarr;{' '}
+                        {dateRange.end.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}{' '}
+                        &middot;{' '}
+                        {Math.abs(
+                          Math.round(
+                            (dateRange.end.getTime() - dateRange.start.getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          )
+                        ) + 1}{' '}
+                        days
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDateRange({ start: null, end: null })}
+                    className="transition-opacity hover:opacity-70"
+                    style={{ fontSize: '11px', color: themeConfig.primary, fontWeight: 700 }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+
+              {festivalsInSelection.length > 0 && (
+                <FestivalPanel
+                  festivals={festivalsInSelection}
+                  primaryColor={themeConfig.primary}
+                  borderColor="#e5e7eb"
+                />
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

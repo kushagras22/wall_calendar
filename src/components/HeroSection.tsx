@@ -5,8 +5,8 @@ interface HeroSectionProps {
   isGlacier: boolean;
   monthLabel: string;
   yearLabel: string;
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
+  /** Tap left/right of month banner or swipe on hero — triggers page flip in parent */
+  onNavigateMonth: (direction: -1 | 1) => void;
 }
 
 export default function HeroSection({
@@ -14,11 +14,13 @@ export default function HeroSection({
   isGlacier,
   monthLabel,
   yearLabel,
-  onPrevMonth,
-  onNextMonth,
+  onNavigateMonth,
 }: HeroSectionProps) {
   return (
-    <div className="relative w-full overflow-visible" style={{ height: '260px' }}>
+    <div
+      className="relative w-full overflow-visible select-none"
+      style={{ height: '260px', touchAction: 'pan-y' }}
+    >
       {/* Hero image */}
       <img
         src={theme.heroImage}
@@ -52,12 +54,24 @@ export default function HeroSection({
             background: isGlacier
               ? theme.primary
               : `linear-gradient(135deg, ${theme.primary}, ${theme.polygonLabel})`,
-            clipPath: 'polygon(0 0, 100% 0, 100% 58%, 55% 58%, 50% 100%, 45% 58%, 0 58%)',
+            clipPath: 'polygon(0 0, 100% 0, 100% 85%, 55% 58%, 50% 100%, 45% 58%, 0% 5%)',
           }}
         >
+          {/* Left decorative element (below tap targets) */}
+          <div className="absolute left-6 top-2 h-[51px] flex flex-col justify-center pointer-events-none z-1">
+            <div
+              className="w-8 h-0.5 mb-1.5"
+              style={{ background: 'rgba(255,255,255,0.5)' }}
+            />
+            <div
+              className="w-5 h-0.5"
+              style={{ background: 'rgba(255,255,255,0.3)' }}
+            />
+          </div>
+
           {/* Month / Year text - right side (ensure no clipping) */}
           <div
-            className="absolute right-6 top-2 flex flex-col items-end"
+            className="absolute right-6 top-2 flex flex-col items-end pointer-events-none z-1"
             style={{
               maxWidth: '60%',
               overflow: 'visible',
@@ -82,68 +96,23 @@ export default function HeroSection({
             </span>
           </div>
 
-          {/* Month navigation */}
-          <div
-            className="absolute left-1/2 top-2 -translate-x-1/2 flex items-center gap-2"
-            style={{ height: '52px' }}
-          >
-            <button
-              type="button"
-              onClick={onPrevMonth}
-              className="transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '999px',
-                border: '1px solid rgba(255,255,255,0.45)',
-                background: 'rgba(0,0,0,0.18)',
-                color: 'white',
-                fontSize: '18px',
-                lineHeight: '34px',
-                fontWeight: 700,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-                backdropFilter: 'blur(6px)',
-              }}
-              aria-label="Previous month"
-              title="Previous month"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              onClick={onNextMonth}
-              className="transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '999px',
-                border: '1px solid rgba(255,255,255,0.45)',
-                background: 'rgba(0,0,0,0.18)',
-                color: 'white',
-                fontSize: '18px',
-                lineHeight: '34px',
-                fontWeight: 700,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-                backdropFilter: 'blur(6px)',
-              }}
-              aria-label="Next month"
-              title="Next month"
-            >
-              ›
-            </button>
-          </div>
-
-          {/* Left decorative element */}
-          <div className="absolute left-6 top-2 h-[51px] flex flex-col justify-center">
-            <div
-              className="w-8 h-0.5 mb-1.5"
-              style={{ background: 'rgba(255,255,255,0.5)' }}
-            />
-            <div
-              className="w-5 h-0.5"
-              style={{ background: 'rgba(255,255,255,0.3)' }}
-            />
-          </div>
+          {/* Invisible tap zones: flip month like turning a page */}
+          <button
+            type="button"
+            onClick={() => onNavigateMonth(-1)}
+            className="absolute inset-y-0 left-0 w-[38%] z-10 cursor-pointer border-0 p-0 bg-transparent"
+            style={{ maxWidth: '220px' }}
+            aria-label="Previous month"
+            title="Previous month (tap here or swipe right on the photo)"
+          />
+          <button
+            type="button"
+            onClick={() => onNavigateMonth(1)}
+            className="absolute inset-y-0 right-0 w-[38%] z-10 cursor-pointer border-0 p-0 bg-transparent"
+            style={{ maxWidth: '220px' }}
+            aria-label="Next month"
+            title="Next month (tap here or swipe left on the photo)"
+          />
         </div>
       </div>
     </div>

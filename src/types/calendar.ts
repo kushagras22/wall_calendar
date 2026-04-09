@@ -12,6 +12,14 @@ export interface DateRange {
   end: Date | null;
 }
 
+export interface RangeNote {
+  id: string;
+  start: Date;
+  end: Date;
+  text: string;
+  createdAt: Date;
+}
+
 export interface ThemeConfig {
   primary: string;
   primaryHover: string;

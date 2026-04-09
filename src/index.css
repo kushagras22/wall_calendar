@@ -29,3 +29,74 @@
 textarea::placeholder {
   color: #c4cdd8;
 }
+
+/* Month "page" flip (hero + body turn like a wall calendar sheet) */
+.calendar-flip-stage {
+  perspective: 1500px;
+  perspective-origin: 50% 35%;
+}
+
+.calendar-flip-stage:focus-visible {
+  outline: 2px solid rgba(14, 165, 233, 0.65);
+  outline-offset: 3px;
+}
+
+.calendar-flip-inner {
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+.calendar-flip-inner--out-next {
+  animation: calendarPageFlipOutNext 0.48s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+}
+
+.calendar-flip-inner--in-next {
+  animation: calendarPageFlipInNext 0.52s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.calendar-flip-inner--out-prev {
+  animation: calendarPageFlipOutPrev 0.48s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+}
+
+.calendar-flip-inner--in-prev {
+  animation: calendarPageFlipInPrev 0.52s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+@keyframes calendarPageFlipOutNext {
+  from {
+    transform: rotateY(0deg) translateZ(0);
+  }
+  to {
+    transform: rotateY(-88deg) translateZ(-12px);
+  }
+}
+
+@keyframes calendarPageFlipInNext {
+  from {
+    transform: rotateY(88deg) translateZ(-12px);
+  }
+  to {
+    transform: rotateY(0deg) translateZ(0);
+  }
+}
+
+@keyframes calendarPageFlipOutPrev {
+  from {
+    transform: rotateY(0deg) translateZ(0);
+  }
+  to {
+    transform: rotateY(88deg) translateZ(-12px);
+  }
+}
+
+@keyframes calendarPageFlipInPrev {
+  from {
+    transform: rotateY(-88deg) translateZ(-12px);
+  }
+  to {
+    transform: rotateY(0deg) translateZ(0);
+  }
+}
