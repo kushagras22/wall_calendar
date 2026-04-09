@@ -16,6 +16,9 @@ const NUM_LINES = 6;
 
 function formatRange(from: Date, to: Date) {
   const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+  if (from.getTime() === to.getTime()) {
+    return from.toLocaleDateString('en-US', opts);
+  }
   return `${from.toLocaleDateString('en-US', opts)} → ${to.toLocaleDateString('en-US', opts)}`;
 }
 
@@ -57,7 +60,7 @@ export default function NotesSection({
               background: themePrimary,
             }}
           >
-            Save note for range
+            Save note
           </button>
         </div>
       )}
@@ -94,8 +97,8 @@ export default function NotesSection({
           onChange={(e) => onChange(e.target.value)}
           placeholder={
             canSaveRangeNote
-              ? 'Write a note for the selected range…'
-              : 'Select a start and end date on the calendar, then write a note here…'
+              ? 'Write a note for the selected date(s)…'
+              : 'Select a date or date range on the calendar, then write a note here…'
           }
           className="absolute inset-0 w-full resize-none focus:outline-none bg-transparent"
           style={{

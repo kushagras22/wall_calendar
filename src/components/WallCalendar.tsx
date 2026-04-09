@@ -50,6 +50,7 @@ const THEMES: Record<Theme, ThemeConfig> = {
 export default function WallCalendar() {
   const [theme, setTheme] = useState<Theme>('glacier');
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
+  const [selectionError, setSelectionError] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [rangeNotes, setRangeNotes] = useState<RangeNote[]>([]);
   const [visibleMonth, setVisibleMonth] = useState(() => {
@@ -98,6 +99,7 @@ export default function WallCalendar() {
     if (flipPhaseRef.current !== 'idle') return;
     flipOutConsumedRef.current = false;
     setDateRange({ start: null, end: null });
+    setSelectionError(null);
     setFlipPhase(direction === 1 ? 'out-next' : 'out-prev');
   }
 
@@ -146,10 +148,11 @@ export default function WallCalendar() {
   }
 
   function saveNoteForSelectedRange() {
-    if (!dateRange.start || !dateRange.end) return;
+    if (!dateRange.start) return;
+    const endRangeDate = dateRange.end || dateRange.start;
     const text = notes.trim();
     if (!text) return;
-    const { from, to } = normalizedRange(dateRange.start, dateRange.end);
+    const { from, to } = normalizedRange(dateRange.start, endRangeDate);
     const entry: RangeNote = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       start: new Date(from.getFullYear(), from.getMonth(), from.getDate()),
@@ -201,6 +204,7 @@ export default function WallCalendar() {
   }
 
   function handleDayClick(day: CalendarDay) {
+    setSelectionError(null);
     if (!dateRange.start && !dateRange.end) {
       setDateRange({ start: day.fullDate, end: null });
       return;
@@ -208,6 +212,10 @@ export default function WallCalendar() {
     if (dateRange.start && !dateRange.end) {
       if (day.fullDate.getTime() === dateRange.start.getTime()) {
         setDateRange({ start: null, end: null });
+        return;
+      }
+      if (day.fullDate.getTime() < dateRange.start.getTime()) {
+        setSelectionError('End date cannot be before the start date. Please select a valid range.');
         return;
       }
       setDateRange({ start: dateRange.start, end: day.fullDate });
@@ -318,7 +326,7 @@ export default function WallCalendar() {
                     onChange={setNotes}
                     rangeNotes={rangeNotes}
                     onDeleteRangeNote={deleteRangeNote}
-                    canSaveRangeNote={Boolean(dateRange.start && dateRange.end)}
+                    canSaveRangeNote={Boolean(dateRange.start)}
                     onSaveRangeNote={saveNoteForSelectedRange}
                     themePrimary={themeConfig.primary}
                     themeMuted={themeConfig.primaryLighter}
@@ -339,6 +347,20 @@ export default function WallCalendar() {
                   />
                 </div>
               </div>
+
+              {selectionError && (
+                <div className="mt-4 px-3 py-2 rounded-lg text-red-600 bg-red-50 border border-red-100 flex items-center justify-between">
+                  <span style={{ fontSize: '11px', fontWeight: 600 }}>{selectionError}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectionError(null)}
+                    className="ml-2 text-red-800 hover:text-red-900 focus:outline-none"
+                    style={{ fontSize: '11px', fontWeight: 700 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
 
               {(dateRange.start || dateRange.end) && (
                 <div
@@ -382,7 +404,7 @@ export default function WallCalendar() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setDateRange({ start: null, end: null })}
+                    onClick={() => { setDateRange({ start: null, end: null }); setSelectionError(null); }}
                     className="transition-opacity hover:opacity-70"
                     style={{ fontSize: '11px', color: themeConfig.primary, fontWeight: 700 }}
                   >
