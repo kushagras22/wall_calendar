@@ -48,18 +48,18 @@ const THEMES: Record<Theme, ThemeConfig> = {
 };
 
 const MONTH_IMAGES = [
-  '/images/months/month_00_january_1775716058306.png',
-  '/images/months/month_01_february_1775715928699.png',
-  '/images/months/month_02_march_1775715945165.png',
-  '/images/months/month_03_april_1775715961900.png',
-  '/images/months/month_04_may_1775716074803.png',
-  '/images/months/month_05_june_1775716091506.png',
-  '/images/months/month_06_july_1775716107137.png',
-  '/images/months/month_07_august_1775716124028.png',
-  '/images/months/month_08_september_1775715982315.png',
-  '/images/months/month_09_october_1775715999543.png',
-  '/images/months/month_10_november_1775716016175.png',
-  '/images/months/month_11_december_1775716034178.png',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719198/month_00_january_1775716058306_kbaqcf.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719197/month_01_february_1775715928699_kl8cuw.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719194/month_02_march_1775715945165_g04c2i.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719191/month_03_april_1775715961900_zgeqgk.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719195/month_04_may_1775716074803_d5jora.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719193/month_05_june_1775716091506_xrfxpt.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719192/month_06_july_1775716107137_fnd5t1.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719193/month_07_august_1775716124028_cekbgi.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719198/month_08_september_1775715982315_hiyblq.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719196/month_09_october_1775715999543_pasorx.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719194/month_10_november_1775716016175_mdygna.jpg',
+  'https://res.cloudinary.com/dr5gxhzgs/image/upload/v1775719197/month_11_december_1775716034178_hk0zg1.jpg',
 ];
 
 interface WallCalendarProps {
