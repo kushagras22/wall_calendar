@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { CalendarDay, DateRange, ThemeConfig } from '../types/calendar';
+import { getFestivalsInRange } from '../data/festivals';
 
 interface CalendarGridProps {
   visibleMonth: Date;
@@ -92,7 +94,14 @@ export default function CalendarGrid({
   onDayClick,
   theme,
 }: CalendarGridProps) {
-  const days = generateCalendarDays(visibleMonth);
+  const days = useMemo(() => generateCalendarDays(visibleMonth), [visibleMonth]);
+
+  const gridFestivals = useMemo(() => {
+    if (!days.length) return [];
+    const firstDay = days[0].fullDate;
+    const lastDay = days[days.length - 1].fullDate;
+    return getFestivalsInRange(firstDay, lastDay, 100);
+  }, [days]);
 
   return (
     <div className="flex flex-col gap-1">
@@ -140,8 +149,11 @@ export default function CalendarGrid({
           else if (isWeekendCol) textColor = theme.primary;
           if (isSelected) textColor = '#ffffff';
 
+          const dayFestivals = gridFestivals.filter(f => isSameDay(f.date, day.fullDate));
+          const primaryFestival = dayFestivals[0];
+
           return (
-            <div key={i} className="flex items-center justify-center py-0.5">
+            <div key={i} className="flex items-center justify-center py-0.5 relative group">
               <button
                 onClick={() => onDayClick(day)}
                 className="relative flex items-center justify-center transition-all duration-150 focus:outline-none group"
@@ -169,8 +181,27 @@ export default function CalendarGrid({
                     style={{ background: '#f3f4f6' }}
                   />
                 )}
-                <span className="relative z-10">{day.date}</span>
+                <span className="relative z-10" style={{ transform: primaryFestival ? 'translateY(-1px)' : 'none' }}>{day.date}</span>
+                {primaryFestival && (
+                  <span 
+                    className="absolute bottom-1.5 w-1 h-1 rounded-full z-10" 
+                    style={{ background: isSelected ? 'rgba(255,255,255,0.9)' : theme.primary }} 
+                  />
+                )}
               </button>
+
+              {primaryFestival && (
+                 <div 
+                  className={`absolute bottom-full mb-1 ${colIndex < 3 ? 'left-0' : colIndex > 3 ? 'right-0' : 'left-1/2 -translate-x-1/2'} w-44 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50 bg-white rounded-lg shadow-xl shadow-gray-200/50 border border-gray-100 p-2.5 translate-y-2 group-hover:translate-y-0`}
+                 >
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: theme.primary, marginBottom: '2px', lineHeight: 1.2 }}>
+                      {primaryFestival.name}
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: 1.3 }}>
+                      {primaryFestival.blurb}
+                    </div>
+                 </div>
+              )}
             </div>
           );
         })}
