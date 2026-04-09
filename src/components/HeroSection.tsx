@@ -7,6 +7,7 @@ interface HeroSectionProps {
   yearLabel: string;
   /** Tap left/right of month banner or swipe on hero — triggers page flip in parent */
   onNavigateMonth: (direction: -1 | 1) => void;
+  customHeroImage: string;
 }
 
 export default function HeroSection({
@@ -15,6 +16,7 @@ export default function HeroSection({
   monthLabel,
   yearLabel,
   onNavigateMonth,
+  customHeroImage,
 }: HeroSectionProps) {
   return (
     <div
@@ -23,8 +25,8 @@ export default function HeroSection({
     >
       {/* Hero image */}
       <img
-        src={theme.heroImage}
-        alt={theme.heroImageAlt}
+        src={customHeroImage}
+        alt={`${monthLabel} themed illustration`}
         className="w-full h-full object-cover transition-all duration-700"
         style={{ display: 'block' }}
       />

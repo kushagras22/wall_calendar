@@ -47,16 +47,32 @@ const THEMES: Record<Theme, ThemeConfig> = {
   },
 };
 
-export default function WallCalendar() {
+const MONTH_IMAGES = [
+  '/images/months/month_00_january_1775716058306.png',
+  '/images/months/month_01_february_1775715928699.png',
+  '/images/months/month_02_march_1775715945165.png',
+  '/images/months/month_03_april_1775715961900.png',
+  '/images/months/month_04_may_1775716074803.png',
+  '/images/months/month_05_june_1775716091506.png',
+  '/images/months/month_06_july_1775716107137.png',
+  '/images/months/month_07_august_1775716124028.png',
+  '/images/months/month_08_september_1775715982315.png',
+  '/images/months/month_09_october_1775715999543.png',
+  '/images/months/month_10_november_1775716016175.png',
+  '/images/months/month_11_december_1775716034178.png',
+];
+
+interface WallCalendarProps {
+  visibleMonth: Date;
+  setVisibleMonth: React.Dispatch<React.SetStateAction<Date>>;
+}
+
+export default function WallCalendar({ visibleMonth, setVisibleMonth }: WallCalendarProps) {
   const [theme, setTheme] = useState<Theme>('glacier');
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
   const [selectionError, setSelectionError] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [rangeNotes, setRangeNotes] = useState<RangeNote[]>([]);
-  const [visibleMonth, setVisibleMonth] = useState(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
-  });
   const [mounted, setMounted] = useState(false);
   const [flipPhase, setFlipPhase] = useState<FlipPhase>('idle');
   const flipPhaseRef = useRef<FlipPhase>('idle');
@@ -312,6 +328,7 @@ export default function WallCalendar() {
                 monthLabel={monthLabel}
                 yearLabel={yearLabel}
                 onNavigateMonth={requestMonthChange}
+                customHeroImage={MONTH_IMAGES[visibleMonth.getMonth()]}
               />
             </div>
 
@@ -395,7 +412,7 @@ export default function WallCalendar() {
                         {Math.abs(
                           Math.round(
                             (dateRange.end.getTime() - dateRange.start.getTime()) /
-                              (1000 * 60 * 60 * 24)
+                            (1000 * 60 * 60 * 24)
                           )
                         ) + 1}{' '}
                         days

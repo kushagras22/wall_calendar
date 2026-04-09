@@ -6,12 +6,13 @@ An interactive, visually stunning wall calendar web application built with React
 
 - **Interactive Calendar Grid**: A functional, easy-to-read grid where you can view days, navigate through months, and select specific date ranges. The grid includes smart validation with an inline UI error banner that gracefully prevents selecting reversed date ranges.
 - **Realistic Page Flipping**: Experience the feel of a physical calendar with smooth, realistic page-flipping animations when turning to the next or previous month. Navigate by swiping horizontally on the hero photo, using keyboard arrow keys, or clicking the invisible tap zones on the edges of the month banner.
-- **Themes**: Switch between two meticulously crafted themes:
-  - **Glacier**: Cool blue tones featuring an ice climber hero image.
-  - **Sunset**: Warm orange hues featuring a sunset hiker.
+- **Dynamic Month-Specific Artwork**: Swapping months dynamically transitions the calendar's hero banner to distinct, vector art tailored perfectly to Indian festivals and cultural seasons (from beautiful Holi colors in March, to glowing Diwali lamps in October). 
+- **Immersive Seasonal Environments**: The application's very background acts as a window to the outside, generating 100% pure CSS weather effects synced to the Indian season timeline. Watch as heat waves ripple across summer months, heavy monsoons pour down in July, or thick frosty snowfall accumulates during winter.
+- **Themes**: Switch between two meticulously crafted core UI themes (Glacier and Sunset) which modify primary highlights and components dynamically.
 - **Premium Aesthetics**: Designed with modern web standards including a complex, dynamically generated SVG twin-loop spiral binding, tasteful drop shadows, drop-down filters, responsive typography, and custom polygon shapes.
 - **Notes Section**: A digital ruled paper section to write and save notes specific to the date range you've selected. It natively supports creating targeted notes for just a single day or spanning multiple days. It automatically records timestamps and neatly formats your list of saved notes.
 - **Festival Panel**: Automatically calculates and displays upcoming global festivals and holidays falling within your selected date range. Powered by a robust internal data structure supporting both fixed Gregorian dates and moving lunisolar/Islamic/Hebrew calendar events.
+- **Custom Footer Dedication**: Shows a beautifully styled custom "Made with love by Kushagra" footer to round out the bottom section.
 
 ## Project Setup
 
