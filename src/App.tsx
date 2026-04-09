@@ -18,7 +18,7 @@ export default function App() {
         <WallCalendar visibleMonth={visibleMonth} setVisibleMonth={setVisibleMonth} />
         
         <div className="mt-8 text-center" style={{ color: '#090e15ff', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textShadow: '0 2px 4px rgba(255,255,255,0.5)' }}>
-          Made with love by Kushagra
+          Made with ♥️ by Kushagra
         </div>
       </div>
     </>
