@@ -321,7 +321,7 @@ export default function WallCalendar({ visibleMonth, setVisibleMonth }: WallCale
             onAnimationEnd={handleFlipAnimationEnd}
             style={{ pointerEvents: flipPhase === 'idle' ? undefined : 'none' }}
           >
-            <div className="relative" style={{ marginBottom: '28px' }}>
+            <div className="relative" style={{ marginBottom: '64px' }}>
               <HeroSection
                 theme={themeConfig}
                 isGlacier={isGlacier}

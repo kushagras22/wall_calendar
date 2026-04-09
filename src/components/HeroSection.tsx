@@ -45,18 +45,25 @@ export default function HeroSection({
       <div
         className="absolute left-0 right-0 flex items-start transition-all duration-700"
         style={{
-          bottom: '-28px',
+          bottom: '-64px',
           height: '88px',
           zIndex: 5,
         }}
       >
+        <svg width="0" height="0" className="absolute pointer-events-none">
+          <defs>
+            <clipPath id="heroCurve" clipPathUnits="objectBoundingBox">
+              <path d="M 0,0 L 1,0 L 1,0.85 C 0.75,0.85 0.65,0.4 0.5,0.95 C 0.35,0.4 0.25,0.85 0,0.85 Z" />
+            </clipPath>
+          </defs>
+        </svg>
         <div
           className="w-full h-full relative transition-all duration-700"
           style={{
             background: isGlacier
               ? theme.primary
               : `linear-gradient(135deg, ${theme.primary}, ${theme.polygonLabel})`,
-            clipPath: 'polygon(0 0, 100% 0, 100% 85%, 55% 58%, 50% 100%, 45% 58%, 0% 5%)',
+            clipPath: 'url(#heroCurve)',
           }}
         >
           {/* Left decorative element (below tap targets) */}

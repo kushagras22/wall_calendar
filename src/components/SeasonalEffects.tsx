@@ -1,20 +1,3 @@
-import React from 'react';
-
-/**
- * 0: Jan (Winter)
- * 1: Feb (Spring)
- * 2: Mar (Spring)
- * 3: Apr (Summer)
- * 4: May (Summer)
- * 5: Jun (Summer/Monsoon)
- * 6: Jul (Monsoon)
- * 7: Aug (Monsoon)
- * 8: Sep (Autumn)
- * 9: Oct (Autumn)
- * 10: Nov (Autumn/Pre-winter)
- * 11: Dec (Winter)
- */
-
 interface SeasonalEffectsProps {
   currentMonth: number;
 }
