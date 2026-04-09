@@ -91,6 +91,11 @@ export default function WallCalendar({ visibleMonth, setVisibleMonth }: WallCale
   const themeConfig = THEMES[theme];
   const isGlacier = theme === 'glacier';
 
+  const currentDate = new Date();
+  const isCurrentMonth =
+    visibleMonth.getMonth() === currentDate.getMonth() &&
+    visibleMonth.getFullYear() === currentDate.getFullYear();
+
   const monthLabel = useMemo(
     () =>
       visibleMonth.toLocaleDateString('en-US', {
@@ -310,7 +315,7 @@ export default function WallCalendar({ visibleMonth, setVisibleMonth }: WallCale
         >
           <div
             className={[
-              'calendar-flip-inner',
+              'calendar-flip-inner rounded-2xl bg-white overflow-hidden relative',
               flipPhase === 'out-next' ? 'calendar-flip-inner--out-next' : '',
               flipPhase === 'in-next' ? 'calendar-flip-inner--in-next' : '',
               flipPhase === 'out-prev' ? 'calendar-flip-inner--out-prev' : '',
@@ -329,6 +334,11 @@ export default function WallCalendar({ visibleMonth, setVisibleMonth }: WallCale
                 yearLabel={yearLabel}
                 onNavigateMonth={requestMonthChange}
                 customHeroImage={MONTH_IMAGES[visibleMonth.getMonth()]}
+                isCurrentMonth={isCurrentMonth}
+                onReturnToToday={() => {
+                  if (flipPhaseRef.current !== 'idle') return;
+                  setVisibleMonth(new Date());
+                }}
               />
             </div>
 
@@ -438,6 +448,72 @@ export default function WallCalendar({ visibleMonth, setVisibleMonth }: WallCale
                 />
               )}
             </div>
+
+            {/* Page Fold Corner for Next Month */}
+            <button
+              className="page-curl-btn absolute bottom-0 right-0 z-50 origin-bottom-right focus:outline-none focus:scale-110 cursor-pointer group"
+              style={{ width: '72px', height: '72px' }}
+              onClick={() => requestMonthChange(1)}
+              title="Next Month"
+              aria-label="Turn page to next month"
+            >
+              <div className="absolute bottom-0 right-0 w-6 h-6 transition-all duration-400 ease-out group-hover:w-16 group-hover:h-16">
+                <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* Hole / Next page preview */}
+                  <path d="M0 48 L48 48 L48 0 Z" fill={themeConfig.primaryLighter} />
+                  
+                  {/* Folded Flap */}
+                  <g filter="url(#fold-shadow)">
+                    <path
+                      d="M0 48 L48 0 L0 0 Z"
+                      fill="#ffffff"
+                      stroke="#ffffff"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                  </g>
+                
+                  <defs>
+                    <filter id="fold-shadow" x="-50%" y="-50%" width="200%" height="200%" filterUnits="userSpaceOnUse">
+                      <feDropShadow dx="-2" dy="-2" stdDeviation="2.5" floodColor="#000000" floodOpacity="0.14" />
+                    </filter>
+                  </defs>
+                </svg>
+              </div>
+            </button>
+
+            {/* Page Fold Corner for Previous Month */}
+            <button
+              className="page-curl-btn-prev absolute bottom-0 left-0 z-50 origin-bottom-left focus:outline-none focus:scale-110 cursor-pointer group"
+              style={{ width: '72px', height: '72px' }}
+              onClick={() => requestMonthChange(-1)}
+              title="Previous Month"
+              aria-label="Turn page to previous month"
+            >
+              <div className="absolute bottom-0 left-0 w-6 h-6 transition-all duration-400 ease-out group-hover:w-16 group-hover:h-16">
+                <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* Hole / Previous page preview */}
+                  <path d="M0 0 L48 48 L0 48 Z" fill={themeConfig.primaryLighter} />
+                  
+                  {/* Folded Flap */}
+                  <g filter="url(#fold-shadow-prev)">
+                    <path
+                      d="M0 0 L48 48 L48 0 Z"
+                      fill="#ffffff"
+                      stroke="#ffffff"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                  </g>
+                
+                  <defs>
+                    <filter id="fold-shadow-prev" x="-50%" y="-50%" width="200%" height="200%" filterUnits="userSpaceOnUse">
+                      <feDropShadow dx="2" dy="-2" stdDeviation="2.5" floodColor="#000000" floodOpacity="0.14" />
+                    </filter>
+                  </defs>
+                </svg>
+              </div>
+            </button>
           </div>
         </div>
       </div>

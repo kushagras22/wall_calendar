@@ -8,6 +8,8 @@ interface HeroSectionProps {
   /** Tap left/right of month banner or swipe on hero — triggers page flip in parent */
   onNavigateMonth: (direction: -1 | 1) => void;
   customHeroImage: string;
+  isCurrentMonth?: boolean;
+  onReturnToToday?: () => void;
 }
 
 export default function HeroSection({
@@ -17,6 +19,8 @@ export default function HeroSection({
   yearLabel,
   onNavigateMonth,
   customHeroImage,
+  isCurrentMonth,
+  onReturnToToday,
 }: HeroSectionProps) {
   return (
     <div
@@ -80,18 +84,40 @@ export default function HeroSection({
 
           {/* Month / Year text - right side (ensure no clipping) */}
           <div
-            className="absolute right-6 top-2 flex flex-col items-end pointer-events-none z-1"
+            className="absolute right-6 top-2 flex flex-col items-end pointer-events-none z-20"
             style={{
               maxWidth: '60%',
               overflow: 'visible',
             }}
           >
-            <span
-              className="font-black tracking-widest leading-none text-white"
-              style={{ fontSize: '22px', letterSpacing: '0.18em' }}
-            >
-              {monthLabel.toUpperCase()}
-            </span>
+            <div className="flex items-center gap-2.5">
+              {!isCurrentMonth && onReturnToToday && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReturnToToday();
+                  }}
+                  className="pointer-events-auto px-3 py-[3px] rounded-full bg-white/25 hover:bg-white/40 transition-colors uppercase font-bold text-white flex items-center justify-center gap-1.5 cursor-pointer shadow-sm backdrop-blur-sm"
+                  style={{ fontSize: '8.5px', letterSpacing: '0.12em', transform: 'translateY(1px)' }}
+                  title="Return to current month"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  GO TO TODAY
+                </button>
+              )}
+              <span
+                className="font-black tracking-widest leading-none text-white pointer-events-none"
+                style={{ fontSize: '22px', letterSpacing: '0.18em' }}
+              >
+                {monthLabel.toUpperCase()}
+              </span>
+            </div>
             <span
               className="font-light text-white"
               style={{

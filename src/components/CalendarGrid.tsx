@@ -12,7 +12,7 @@ interface CalendarGridProps {
 const WEEKDAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
 function mondayIndex(date: Date) {
-  // JS: 0=Sun..6=Sat -> convert to 0=Mon..6=Sun
+  // 0=Sun..6=Sat -> convert to 0=Mon..6=Sun
   return (date.getDay() + 6) % 7;
 }
 
@@ -143,11 +143,14 @@ export default function CalendarGrid({
             dateRange.start,
             dateRange.end
           );
+          const isTodayDate = isSameDay(day.fullDate, new Date());
 
           let textColor = '#374151';
           if (isOverflow) textColor = '#d1d5db';
           else if (isWeekendCol) textColor = theme.primary;
+          
           if (isSelected) textColor = '#ffffff';
+          else if (isTodayDate) textColor = theme.primary;
 
           const dayFestivals = gridFestivals.filter(f => isSameDay(f.date, day.fullDate));
           const primaryFestival = dayFestivals[0];
@@ -164,13 +167,14 @@ export default function CalendarGrid({
                   minHeight: '34px',
                   borderRadius: '50%',
                   fontSize: '12px',
-                  fontWeight: isSelected ? 700 : isOverflow ? 400 : 500,
+                  fontWeight: isSelected || isTodayDate ? 700 : isOverflow ? 400 : 500,
                   color: textColor,
                   background: isSelected
                     ? theme.primary
                     : isInRange
                     ? theme.primaryLighter
                     : 'transparent',
+                  boxShadow: isTodayDate && !isSelected ? `inset 0 0 0 1.5px ${theme.primary}` : 'none',
                   cursor: 'pointer',
                 }}
               >
